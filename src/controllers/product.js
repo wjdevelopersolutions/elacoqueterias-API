@@ -1,9 +1,10 @@
 import slug from 'slug';
 import { nanoid } from 'nanoid';
 import { validationResult } from 'express-validator';
+import _ from 'underscore';
 
 import Product from '../models/product';
-import product from '../models/product';
+
 
 /**
  * @Desc Get list of all products
@@ -11,33 +12,30 @@ import product from '../models/product';
  * @access Public
  */
 
-export const getProduct = async (req, res, next) => {
+export const getProduct = (req, res, next) => {
 
-  const productos = await Product.find();
-  
-  try {
-    if (productos.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          msg: 'No se encontraron productos en la base de datos'
-        }
-      })
-    }
-    res.json({
-      success: true,
-      msg: 'Show all products',
-      productos
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: {
-        msg: 'Error 500: conección con el servidor fallida',
-        error
-      }
-    })
-  }
+  Product.find({}, (err, docs) => {
+     if(err){
+        console.log(`Error: ` + err)
+        res.status(500).json({
+           success: false,
+           error: {
+             type: "Internal Server Error",
+             msg: "No se puede completar la petición realizada por el navegador ya que se ha producido un error inesperado en el navegador.",
+             err
+           }
+         })
+     } else{
+        res.json({
+          success: true,
+          result: {
+            type: "OK",
+            msg: "petición fue completada de manera exitosa",
+            items: docs
+          }
+        });
+     }
+  });
 
 }
 
@@ -52,7 +50,7 @@ export const postProduct = async (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    console.log({errors: errors.array()});
+    // console.log({errors: errors.array()});
     return res.status(400).json({ errors: errors.array() });
   }
 
@@ -71,12 +69,12 @@ export const postProduct = async (req, res, next) => {
 
   const producto = new Product(body);
 
-  console.log(producto);
+  // console.log(producto);
 
   const productoGuardado = await producto.save();
   
   try {
-    res.json({
+    res.status(201).json({
       success: true,
       msg: 'Se ha creado el producto',
       producto: productoGuardado
@@ -99,32 +97,42 @@ export const postProduct = async (req, res, next) => {
 
 export const getProductById = async (req, res, next) => {
 
-  const producto = await Product.findById({ _id: req.params.Prod_Id });
-
-  try {
-    if (producto === null) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          msg: `No se encontro el producto con el ID: ${req.params.Prod_Id} en la base de datos`
-        }
-      })
-    }
-    res.json({
-      success: true,
-      msg: `Show product ${req.params.id}`,
-      producto
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      success: false,
-      error: {
-        msg: 'Error 500: conección con el servidor fallida',
-        error
-      }
-    });
-  }
+  Product.findById({ 
+      _id: req.params.Prod_Id
+  }, (err, doc) => {
+     if(err){
+        console.log(`Error: ` + err);
+        res.status(500).json({
+          success: false,
+          error: {
+            type: "Internal Server Error",
+            msg: `No se puede completar la petición realizada por el navegador ya que se ha producido un error inesperado en ${req.get('host')}.`,
+            err
+          }
+        });
+     } else{
+       if(!doc){
+          console.log(`El producto con el id: ${req.params.Prod_Id} no se encuentra en la base de datos`);
+          res.status(404).json({
+            error: {
+              type: 404,
+              success: false,
+              type: "Not Found",
+              msg: `El producto con el id: ${req.params.Prod_Id} no se encuentra en la base de datos`
+            }
+          });
+       } else{
+          res.json({
+            result: {
+              type: 200,
+              success: true,
+              msg: "petición fue completada de manera exitosa",
+              item: doc
+            }
+          });
+       }
+     }
+  });
 
 }
 
@@ -134,12 +142,50 @@ export const getProductById = async (req, res, next) => {
  * @access Private
  */
 
-export const updateProduct = (req, res, next) => {
+export const updateProduct = async (req, res, next) => {
 
-  res.json({
-    success: true,
-    msg: `Update product ${req.params.id}`
+  // Return a copy of the object, filtered to only have values for the allowed keys (or array of valid keys)
+  const newProduct = _.pick(req.body, (product) => {
+    return !_.isEmpty(product);
   });
+
+  const [ updatedProduct, bdpIsValid ] = await Promise.all([
+    Product.findByIdAndUpdate(req.params.Prod_Id, newProduct, { new: true }),
+    Product.findById(req.params.Prod_Id)
+  ]);
+
+  if ( !bdpIsValid ) {
+    return res.status(404).json({
+      error: {
+        type: 404,
+        success: false,
+        type: "Not Found",
+        msg: `El producto con el id: ${req.params.Prod_Id} no se encuentra en la base de datos`
+      }
+    })
+  }
+
+  try {
+    res.json({
+      result: {
+        type: 200,
+        success: true,
+        msg: "petición fue completada de manera exitosa",
+        item: updatedProduct
+      }
+    });
+  } catch (error) {
+    console.log(`Error: ` + err);
+    res.status(500).json({
+      success: false,
+      error: {
+        type: "Internal Server Error",
+        msg: `No se puede completar la petición realizada por el navegador ya que se ha producido un error inesperado en ${req.get('host')}.`,
+        err
+      }
+    });
+  }
+
 }
 
 /**
@@ -148,11 +194,40 @@ export const updateProduct = (req, res, next) => {
  * @access Private
  */
 
-export const deleteProduct = (req, res, next) => {
+export const deleteProduct = async (req, res, next) => {
 
-  res.json({
-    success: true,
-    msg: `Delete product ${req.params.id}`
-  });
+  const bdpIsValid = await Product.findOne({ _id: req.params.Prod_Id });
+
+  try {
+    
+    if ( !bdpIsValid ) {
+      return res.status(404).json({
+        error: {
+          type: 404,
+          success: false,
+          type: "Not Found",
+          msg: `El producto con el id: ${req.params.Prod_Id} no se encuentra en la base de datos`
+        }
+      })
+    }
+  
+    await Product.deleteOne({ _id: req.params.Prod_Id });
+
+    res.json({
+      success: true,
+      msg: `El producto ${bdpIsValid.Prod_Title} se ha eliminado con éxito!`
+    });
+
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: {
+        type: "Internal Server Error",
+        msg: `No se puede completar la petición realizada por el navegador ya que se ha producido un error inesperado en ${req.get('host')}.`,
+        error
+      }
+    });
+  }
 }
 
