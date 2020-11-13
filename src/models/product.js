@@ -89,6 +89,11 @@ const productSchema = new Schema({
   Prod_CreateAt: {
     type: Date,
     default: Date.now
+  },
+  Usr_Id: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   }
 
 });

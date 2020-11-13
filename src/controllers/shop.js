@@ -1,3 +1,5 @@
+import Product from '../models/product';
+
 /**
  * @Desc Get list of all shops
  * @route GET /api/v1/shop
@@ -25,6 +27,54 @@ export const postShop = (req, res, next) => {
     msg: 'Create a shop'
   });
 }
+
+/**
+ * @Desc Create a new shop
+ * @route POST /api/v1/shop
+ * @access Private
+ */
+
+export const getCart = (req, res, next) => {
+
+  req.user
+    .populate('Usr_Cart.Cart_Items.Prod_Id')
+    .execPopulate()
+    .then(user => {
+
+      // console.log(user.Usr_Cart.Cart_Items);
+
+      res.json({
+        success: true,
+        msg: 'Mi carrito',
+        items: user.Usr_Cart.Cart_Items
+      });
+    })
+}
+
+/**
+ * @Desc Add e new item to shopping cart
+ * @route POST /api/v1/shop/add-to-cart
+ * @access Public
+ */
+
+export const postShopAddToCart = (req, res, next) => {
+
+  Product.findById(req.body.Prod_Id)
+    .then(product => {
+      return req.user.addToCart(product);
+    })
+    .then(result => {
+
+      res.json({
+        success: true,
+        msg: 'Producto agregado al carrito',
+        result
+      });
+    })
+}
+
+
+
 
 /**
  * @Desc Get a single shop

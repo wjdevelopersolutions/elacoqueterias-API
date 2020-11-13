@@ -6,12 +6,18 @@ import {
   postShop,
   getShopById,
   updateShop,
-  deleteShop
+  deleteShop,
+  getCart,
+  postShopAddToCart
 } from '../controllers/shop';
 
 router.route('/')
       .get(getShop)
       .post(postShop);
+
+router.route('/add-to-cart')
+      .get(getCart)
+      .post(postShopAddToCart);
 
 router.route('/:id')
       .get(getShopById)

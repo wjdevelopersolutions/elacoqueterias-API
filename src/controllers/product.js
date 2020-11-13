@@ -14,28 +14,30 @@ import Product from '../models/product';
 
 export const getProduct = (req, res, next) => {
 
-  Product.find({}, (err, docs) => {
-     if(err){
-        console.log(`Error: ` + err)
-        res.status(500).json({
-           success: false,
-           error: {
-             type: "Internal Server Error",
-             msg: "No se puede completar la petición realizada por el navegador ya que se ha producido un error inesperado en el navegador.",
-             err
+  Product.find()
+    .populate('Usr_Id', 'Usr_Name')
+    .exec((err, docs) => {
+      if(err){
+         console.log(`Error: ` + err)
+         res.status(500).json({
+            success: false,
+            error: {
+              type: "Internal Server Error",
+              msg: "No se puede completar la petición realizada por el navegador ya que se ha producido un error inesperado en el navegador.",
+              err
+            }
+          })
+      } else{
+         res.json({
+           success: true,
+           result: {
+             type: "OK",
+             msg: "petición fue completada de manera exitosa",
+             items: docs
            }
-         })
-     } else{
-        res.json({
-          success: true,
-          result: {
-            type: "OK",
-            msg: "petición fue completada de manera exitosa",
-            items: docs
-          }
-        });
-     }
-  });
+         });
+      }
+   });
 
 }
 
@@ -64,7 +66,8 @@ export const postProduct = async (req, res, next) => {
     Prod_Price: req.body.Prod_Price,
     Prod_Images: req.body.Prod_Images,
     Prod_Videos: req.body.Prod_Videos,
-    Prod_Description: req.body.Prod_Description
+    Prod_Description: req.body.Prod_Description,
+    Usr_Id: req.user._id
   }
 
   const producto = new Product(body);
