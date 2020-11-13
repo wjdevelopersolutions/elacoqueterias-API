@@ -38,23 +38,20 @@ connectDB()
       
           user.save();
         }
-      })
+      });
 
 
   });
 
 app.use((req, res, next) => {
-
-  User.findOne({ _id: "5fadc5274c9db61f00b74149" })
+  User.findOne({ _id: "5fae8d026d78c61ea0d2d7b3" })
     .then(user => { 
-
       req.user = user;
       next();
-
     })
     .catch(err => {
       console.log(err);
-    })
+    });
 })
   
 

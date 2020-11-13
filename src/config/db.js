@@ -3,7 +3,7 @@ import colors from 'colors';
 
 const connectDB = async () => {
 
-  const conn = await mongoose.connect( 'mongodb://localhost:27017/devcoqueterias', {
+  const conn = await mongoose.connect( process.env.DB_URI, {
     useNewUrlParser: true,
     useCreateIndex: true,
     useFindAndModify: false,

@@ -100,6 +100,13 @@ export const postProduct = async (req, res, next) => {
 
 export const getProductById = async (req, res, next) => {
 
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    // console.log({errors: errors.array()});
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   Product.findById({ 
       _id: req.params.Prod_Id
   }, (err, doc) => {
@@ -146,6 +153,7 @@ export const getProductById = async (req, res, next) => {
  */
 
 export const updateProduct = async (req, res, next) => {
+
 
   // Return a copy of the object, filtered to only have values for the allowed keys (or array of valid keys)
   const newProduct = _.pick(req.body, (product) => {
@@ -199,6 +207,11 @@ export const updateProduct = async (req, res, next) => {
 
 export const deleteProduct = async (req, res, next) => {
 
+  // Errors req express validator
+  const errors = validationResult(req);
+  if(!errors.isEmpty()) { return res.status(400).json({ error: errors.array() }) };
+
+  // Is product valid to delete
   const bdpIsValid = await Product.findOne({ _id: req.params.Prod_Id });
 
   try {
@@ -211,15 +224,23 @@ export const deleteProduct = async (req, res, next) => {
           type: "Not Found",
           msg: `El producto con el id: ${req.params.Prod_Id} no se encuentra en la base de datos`
         }
-      })
+      });
     }
   
     await Product.deleteOne({ _id: req.params.Prod_Id });
 
-    res.json({
-      success: true,
-      msg: `El producto ${bdpIsValid.Prod_Title} se ha eliminado con éxito!`
-    });
+    try {
+      res.json({
+        success: true,
+        msg: `El producto ${bdpIsValid.Prod_Title} se ha eliminado con éxito!`
+      });
+    } catch(error) {
+      res.status(500).json({
+        success: false,
+        msg: '500: Internal server error, no se pudo eliminar el producto',
+        error
+      });
+    }
 
 
   } catch (error) {

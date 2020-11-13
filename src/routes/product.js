@@ -2,7 +2,7 @@ import express from 'express';
 const router = express.Router();
 
 // Express validator
-import { body } from 'express-validator';
+import { body, check } from 'express-validator';
 
 import {
   getProduct,
@@ -24,8 +24,23 @@ router.route('/')
             postProduct);
 
 router.route('/:Prod_Id')
-      .get(getProductById)
-      .put(updateProduct)
-      .delete(deleteProduct);
+      .get(
+            [
+                  check('Prod_Id', 'Prod_Id no valido, debes de ingreasar un mongo _id valido').isMongoId()
+            ],
+            getProductById
+      )
+      .put(
+            [
+                  check('Prod_Id', 'Prod_Id no valido, debes de ingreasar un mongo _id valido').isMongoId()
+            ],
+            updateProduct
+      )
+      .delete(
+            [
+                  check('Prod_Id', 'Prod_Id no valido, debes de ingreasar un mongo _id valido').isMongoId()
+            ],
+            deleteProduct
+      );
 
 export default router;

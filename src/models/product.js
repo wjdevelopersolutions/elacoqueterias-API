@@ -28,7 +28,7 @@ const productSchema = new Schema({
   Prod_Description: {
     type: String,
     required: true,
-    maxlength: [500, 'La descripción no debe ser mayor a 500 caracteres']
+    maxlength: [3000, 'La descripción no debe ser mayor a 3000 caracteres']
   },
   Prod_Views: {
     type: Number,
@@ -89,6 +89,15 @@ const productSchema = new Schema({
   Prod_CreateAt: {
     type: Date,
     default: Date.now
+  },
+  Prod_UpdatedAt: {
+    type: Date,
+    default: Date.now
+  },
+  Prod_Inventory: {
+    type: Number,
+    required: true,
+    default: 0
   },
   Usr_Id: {
     type: Schema.Types.ObjectId,
