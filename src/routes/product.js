@@ -16,9 +16,10 @@ router.route('/')
       .get(getProduct)
       .post(
             [ 
-                  body('Prod_Price', 'El precio del producto es obligatorio').not().isEmpty().trim().escape(),
+                  body('Prod_Title', 'El nomobre del producto es obligatorio').not().isEmpty().trim(),
+                  body('Prod_Price', 'El precio del producto es obligatorio').not().isEmpty().trim(),
                   body('Prod_Images', 'Debes de darle una imagen a tu producto').not().isEmpty(),
-                  body('Prod_Description', 'La descriptción del producto es obligatoria').not().isEmpty().trim().escape(),
+                  body('Prod_Description', 'La descriptción del producto es obligatoria').not().isEmpty().trim(),
 
             ],
             postProduct);
